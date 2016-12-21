@@ -15,11 +15,13 @@ AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 BLOCKED_IDS = ['U0XLDQ7J8'] # any user ID in here will get no response from bot
 
+
 def get_reddit_stuff(subreddit):
     title = ""
     image = ""
     subreddit = reddit.subreddit(subreddit)
-    if (subreddit == None):
+
+    if subreddit is None:
         return "No subreddit provided", ""
     try:
         for submission in subreddit.hot():
@@ -32,11 +34,11 @@ def get_reddit_stuff(subreddit):
         return "Invalid/unsupported subreddit", ""
     return title, image
 
+
 def handle_command(command, channel):
     title, image = get_reddit_stuff(command)
     response = title + "\n" + image
-    slack_client.api_call("chat.postMessage", 
-            channel=channel, text=response, as_user=True)
+    slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
@@ -46,13 +48,17 @@ def parse_slack_output(slack_rtm_output):
             if output and 'text' in output and AT_BOT in output['text']:
                 if output['user'] in BLOCKED_IDS:
                     return None, None
+
                 first = output['text'].split(AT_BOT)[1].strip().lower()
+
                 if ':' in first and len(first) > 1:
                     text = first.split(': ', 1)[1]
                 else:
                     text = first
-                if text==' ' or text==None:
+
+                if text == ' ' or text is None:
                     return None, None
+
                 texts = re.match('[a-zA-Z0-9_]*', text).group()
                 print(texts)
                 return texts, output['channel']
