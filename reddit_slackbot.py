@@ -32,6 +32,7 @@ def get_reddit_stuff(subreddit):
         return "Invalid/unsupported subreddit", ""
     return title, image
 
+
 def handle_command(command, channel):
     title, image = get_reddit_stuff(command)
     response = title + "\n" + image
@@ -57,6 +58,7 @@ def parse_slack_output(slack_rtm_output):
                 print(texts)
                 return texts, output['channel']
     return None, None
+
 
 if __name__ == '__main__':
     READ_WEBSOCKET_DELAY = 1
