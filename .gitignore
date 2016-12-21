@@ -1,0 +1,8 @@
+slackclient*
+praw*
+websocket*
+update*
+six*
+requests*
+decorator*
+credentials.*
