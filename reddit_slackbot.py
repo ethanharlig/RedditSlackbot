@@ -16,16 +16,48 @@ AT_BOT = "<@" + credentials.BOT_ID + ">"
 BLOCKED_IDS = [] # any user ID in here will get no response from bot
 
 
-def get_reddit_stuff(subreddit):
+def get_reddit_stuff(subreddit, options):
     title = ""
     image = ""
     subreddit = reddit.subreddit(subreddit)
+    print(subreddit)
 
     if subreddit is None:
         return "No subreddit provided", ""
+
+    sub = None
+
+    if options is None or options[0] == "h":
+        sub = subreddit.hot()
+    elif options[0] == "d":
+        sub = subreddit.top('day')
+    elif options[0] == "w":
+        sub = subreddit.top('week')
+    elif options[0] == "m":
+        sub = subreddit.top('month')
+    elif options[0] == "y":
+        sub = subreddit.top('year')
+    elif options[0] == "a":
+        sub = subreddit.top('all')
+
+    count = 1
+    str_count = ''
+    if options is not None and len(options) > 1:
+        for item in options[1:]:
+            str_count += item
+        count = int(str_count)
+        if count < 1:
+            count = 1
+    print(count)
+
+    cur = 0
+
     try:
-        for submission in subreddit.hot():
+        for submission in sub:
             if submission.stickied:
+                continue
+            cur += 1
+            if cur != count:
                 continue
             title += submission.title
             image += submission.url
@@ -35,8 +67,8 @@ def get_reddit_stuff(subreddit):
     return title, image
 
 
-def handle_command(command, channel):
-    title, image = get_reddit_stuff(command)
+def handle_command(command, channel, options):
+    title, image = get_reddit_stuff(command, options)
     response = title + "\n" + image
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
@@ -47,7 +79,7 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
                 if output['user'] in BLOCKED_IDS:
-                    return None, None
+                    return None, None, None
 
                 first = output['text'].split(AT_BOT)[1].strip().lower()
 
@@ -55,23 +87,29 @@ def parse_slack_output(slack_rtm_output):
                     text = first.split(': ', 1)[1]
                 else:
                     text = first
+                optional = text.split(' ')
 
-                if text == ' ' or text is None:
-                    return None, None
+                options = None
+                if len(optional) > 1:
+                    options = optional[1]
+
+                if text is None or text == ' ' or text == ':':
+                    return None, None, None
+
+                emojis = slack_client.api_call("emoji.list")
 
                 texts = re.match('[a-zA-Z0-9_]*', text).group()
-                print(texts)
-                return texts, output['channel']
-    return None, None
+                return texts, output['channel'], options
+    return None, None, None
 
 
 if __name__ == '__main__':
     READ_WEBSOCKET_DELAY = 1
     if slack_client.rtm_connect():
         while True:
-            command, channel = parse_slack_output(slack_client.rtm_read())
+            command, channel, options = parse_slack_output(slack_client.rtm_read())
             if command and channel:
-                handle_command(command, channel)
+                handle_command(command, channel, options)
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID.")
