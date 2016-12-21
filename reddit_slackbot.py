@@ -13,7 +13,7 @@ reddit = praw.Reddit(user_agent = credentials.r_user_agent, client_id = credenti
 
 AT_BOT = "<@" + credentials.BOT_ID + ">"
 
-BLOCKED_IDS = ['U0XLDQ7J8'] # any user ID in here will get no response from bot
+BLOCKED_IDS = [] # any user ID in here will get no response from bot
 
 def get_reddit_stuff(subreddit):
     title = ""
