@@ -13,6 +13,8 @@ reddit = praw.Reddit(user_agent = credentials.r_user_agent, client_id = credenti
 
 AT_BOT = "<@" + credentials.BOT_ID + ">"
 
+BLOCKED_IDS = ['U0XLDQ7J8'] # any user ID in here will get no response from bot
+
 def get_reddit_stuff(subreddit):
     title = ""
     image = ""
@@ -42,6 +44,8 @@ def parse_slack_output(slack_rtm_output):
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
+                if output['user'] in BLOCKED_IDS:
+                    return None, None
                 first = output['text'].split(AT_BOT)[1].strip().lower()
                 if ':' in first and len(first) > 1:
                     text = first.split(': ', 1)[1]
@@ -64,3 +68,7 @@ if __name__ == '__main__':
             time.sleep(READ_WEBSOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID.")
+
+
+# BELOW IS AN EXAMPLE API CALL SINCE I KEEP FORGETTING
+# users = slack_client.api_call("users.list")
