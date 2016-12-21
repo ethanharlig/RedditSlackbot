@@ -7,3 +7,4 @@ requests*
 decorator*
 credentials.*
 .reddit_slackbot.py.swp
+.idea/
