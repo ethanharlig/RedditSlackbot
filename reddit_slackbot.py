@@ -25,7 +25,7 @@ def get_reddit_stuff(subreddit, options):
     if subreddit is None:
         return "No subreddit provided", ""
 
-    sub = None
+    sub = subreddit.hot()
 
     if options is None or options[0] == "h":
         sub = subreddit.hot()
@@ -45,7 +45,10 @@ def get_reddit_stuff(subreddit, options):
     if options is not None and len(options) > 1:
         for item in options[1:]:
             str_count += item
-        count = int(str_count)
+        try:
+            count = int(str_count)
+        except Exception:
+            count = 1
         if count < 1:
             count = 1
     print(count)
