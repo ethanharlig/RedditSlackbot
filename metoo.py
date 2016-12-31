@@ -1,12 +1,14 @@
 from __future__ import print_function
 from slackclient import SlackClient
 import credentials
+import requests
 
 
 BOT_NAME = 'redditbot'
 
 slack_client = SlackClient(credentials.SLACK_BOT_TOKEN)
 api_call = "emoji.list"
+api_call = "reactions.add&name=klug"
 
 
 if __name__ == "__main__":
