@@ -6,6 +6,7 @@ import random
 import time
 import re
 import credentials
+import datetime
 
 slack_client = SlackClient(credentials.SLACK_BOT_TOKEN)
 
@@ -13,8 +14,8 @@ reddit = praw.Reddit(user_agent = credentials.r_user_agent, client_id = credenti
 
 AT_BOT = "<@" + credentials.BOT_ID + ">"
 
-BLOCKED_IDS = [] # any user ID in here will get no response from bot
-
+LOL_IDS = []
+BLOCKED_IDS = ['U0YGL2KQD', 'U0XLDQ7J8'] # any user ID in here will get no response from bot
 
 def get_reddit_stuff(subreddit, options):
     title = ""
@@ -51,7 +52,6 @@ def get_reddit_stuff(subreddit, options):
             count = 1
         if count < 1:
             count = 1
-    print(count)
 
     cur = 0
 
@@ -81,8 +81,18 @@ def parse_slack_output(slack_rtm_output):
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
-                if output['user'] in BLOCKED_IDS:
+                curr_id = output['user']
+                if curr_id in BLOCKED_IDS:
+                    print(users.get(curr_id)[0] + " is blocked")
                     return None, None, None
+
+                # check if user has called the bot 10 times
+                if users.get(curr_id)[1] == 10:
+                    print(users.get(curr_id)[0] + " has exceeded their 10 requests for the day")
+                    return None, None, None
+
+                users.get(curr_id)[1] += 1
+                print(users.get(curr_id)[0] + " has called the bot " + str(users.get(curr_id)[1]) + " times today")
 
                 first = output['text'].split(AT_BOT)[1].strip().lower()
 
@@ -99,24 +109,53 @@ def parse_slack_output(slack_rtm_output):
                 if text is None or text == ' ' or text == ':':
                     return None, None, None
 
-                emojis = slack_client.api_call("emoji.list")
-
                 texts = re.match('[a-zA-Z0-9_]*', text).group()
+                if curr_id in LOL_IDS:
+                    texts = 'history'
+
                 return texts, output['channel'], options
     return None, None, None
 
 
+def reset_count():
+    for curr_id in users:
+        users.get(curr_id)[1] = 0
+
+
 if __name__ == '__main__':
     READ_WEBSOCKET_DELAY = 1
+
+    today = datetime.date.today()
+    tomorrow = datetime.date.today() + datetime.timedelta(days = 1)
+
+    global users
+    users = {}
+    all_users = slack_client.api_call("users.list").get('members')
+    for user in all_users:
+        users[user.get('id')] = [user.get('name'), 0]
+
+    count = 0
+
     if slack_client.rtm_connect():
         while True:
+            count += 1
+
             command, channel, options = parse_slack_output(slack_client.rtm_read())
             if command and channel:
                 handle_command(command, channel, options)
             time.sleep(READ_WEBSOCKET_DELAY)
+# reset count of how many times each user has called bot that day
+            if today == tomorrow:
+                reset_count()
+                today = datetime.date.today()
+                tomorrow = datetime.date.today() + datetime.timedelta(days = 1)
+
+            # if it has been a minute
+            if count == 60:
+                today = datetime.date.today()
+                count = 0
     else:
         print("Connection failed. Invalid Slack token or bot ID.")
 
 
 # BELOW IS AN EXAMPLE API CALL SINCE I KEEP FORGETTING
-# users = slack_client.api_call("users.list")
