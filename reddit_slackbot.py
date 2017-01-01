@@ -15,7 +15,7 @@ reddit = praw.Reddit(user_agent = credentials.r_user_agent, client_id = credenti
 AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 LOL_IDS = []
-BLACKLISTED_IDS = ['U0YGL2KQD', 'U0XLDQ7J8'] # any user ID in here will get no response from bot
+BLACKLISTED_IDS = [] # any user ID in here will get no response from bot
 WHITELISTED_IDS = ['U0XS9BU3V']
 
 def get_reddit_stuff(subreddit, options):
