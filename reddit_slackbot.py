@@ -15,13 +15,13 @@ reddit = praw.Reddit(user_agent = credentials.r_user_agent, client_id = credenti
 AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 LOL_IDS = []
-BLOCKED_IDS = ['U0YGL2KQD', 'U0XLDQ7J8'] # any user ID in here will get no response from bot
+BLACKLISTED_IDS = ['U0YGL2KQD', 'U0XLDQ7J8'] # any user ID in here will get no response from bot
+WHITELISTED_IDS = ['U0XS9BU3V']
 
 def get_reddit_stuff(subreddit, options):
     title = ""
     image = ""
     subreddit = reddit.subreddit(subreddit)
-    print(subreddit)
 
     if subreddit is None:
         return "No subreddit provided", ""
@@ -82,17 +82,20 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
                 curr_id = output['user']
-                if curr_id in BLOCKED_IDS:
+                if curr_id in BLACKLISTED_IDS:
                     print(users.get(curr_id)[0] + " is blocked")
                     return None, None, None
 
                 # check if user has called the bot 10 times
-                if users.get(curr_id)[1] == 10:
+                if curr_id not in WHITELISTED_IDS and users.get(curr_id)[1] == 10:
                     print(users.get(curr_id)[0] + " has exceeded their 10 requests for the day")
                     return None, None, None
 
-                users.get(curr_id)[1] += 1
-                print(users.get(curr_id)[0] + " has called the bot " + str(users.get(curr_id)[1]) + " times today")
+                if curr_id in WHITELISTED_IDS:
+                    print(users.get(curr_id)[0] + " is a whitelisted user")
+                else:
+                    users.get(curr_id)[1] += 1
+                    print(users.get(curr_id)[0] + " has called the bot " + str(users.get(curr_id)[1]) + " times today")
 
                 first = output['text'].split(AT_BOT)[1].strip().lower()
 
