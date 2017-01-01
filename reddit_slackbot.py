@@ -121,6 +121,7 @@ def parse_slack_output(slack_rtm_output):
 
 
 def reset_count():
+    print("COUNT RESET")
     for curr_id in users:
         users.get(curr_id)[1] = 0
 
