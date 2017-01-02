@@ -16,7 +16,8 @@ AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 LOL_IDS = []
 BLACKLISTED_IDS = [] # any user ID in here will get no response from bot
-WHITELISTED_IDS = ['U0XS9BU3V']
+# WHITELISTED_IDS = ['U0XS9BU3V']
+WHITELISTED_IDS = []
 
 def get_reddit_stuff(subreddit, options):
     title = ""
@@ -71,8 +72,14 @@ def get_reddit_stuff(subreddit, options):
 
 
 def handle_command(command, channel, options):
-    title, image = get_reddit_stuff(command, options)
-    response = title + "\n" + image
+    response = ""
+
+    if options == 'exceed':
+        response = command + " has exceeded their 10 requests for the day."
+
+    else:
+        title, image = get_reddit_stuff(command, options)
+        response = title + "\n" + image
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
 
@@ -88,7 +95,10 @@ def parse_slack_output(slack_rtm_output):
 
                 # check if user has called the bot 10 times
                 if curr_id not in WHITELISTED_IDS and users.get(curr_id)[1] == 10:
+                    users.get(curr_id)[1] += 1
                     print(users.get(curr_id)[0] + " has exceeded their 10 requests for the day")
+                    return users.get(curr_id)[0], output['channel'], 'exceed'
+                elif curr_id not in WHITELISTED_IDS and users.get(curr_id)[1] > 10:
                     return None, None, None
 
                 if curr_id in WHITELISTED_IDS:
@@ -121,7 +131,7 @@ def parse_slack_output(slack_rtm_output):
 
 
 def reset_count():
-    print("COUNT RESET")
+    print("COUNT RESET: " + str(datetime.now()))
     for curr_id in users:
         users.get(curr_id)[1] = 0
 
