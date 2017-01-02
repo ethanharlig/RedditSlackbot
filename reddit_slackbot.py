@@ -31,7 +31,7 @@ def get_reddit_stuff(subreddit, options):
     # determine which "links from" option to get
     if options is None or options[0] == "h":
         sub = subreddit.hot()
-    if options[0] == "d":
+    elif options[0] == "d":
         sub = subreddit.top('day')
     elif options[0] == "w":
         sub = subreddit.top('week')
@@ -53,7 +53,7 @@ def get_reddit_stuff(subreddit, options):
             count = int(str_count)
         except Exception:
             count = 1
-        if count < 1:
+        if count < 1 or count > 100:
             count = 1
 
     cur = 0
@@ -97,7 +97,7 @@ def parse_slack_output(slack_rtm_output):
             if output and 'text' in output and AT_BOT in output['text']:
                 curr_id = output['user']
                 if curr_id in BLACKLISTED_IDS:
-                    print(users.get(curr_id)[0] + " is blocked")
+                    print(users.get(curr_id)[0] + " is a blocked user")
                     return None, None, None
 
                 # if user has called the bot 10 times, give the appropriate response
