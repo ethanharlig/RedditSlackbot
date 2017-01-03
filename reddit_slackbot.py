@@ -16,7 +16,13 @@ AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 LOL_IDS = []
 BLACKLISTED_IDS = [] # any user ID in here will get no response from bot
-WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
+# WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
+WHITELISTED_IDS = []
+RANDOM_CHANNEL = credentials.random_channel
+REDDIT_CHANNEL = credentials.reddit_channel
+
+RANDOM_CAP = 1
+REDDIT_CAP = 10
 
 def get_reddit_stuff(subreddit, options):
     title = ""
@@ -81,7 +87,11 @@ def handle_command(command, channel, options):
 
     # if options is exceeded, the user is told that they have exceeded their requests
     if options == 'exceed':
-        response = "User " + command + " has exceeded their 10 requests for the day."
+        response = "User " + command + " has exceeded their " 
+        if channel == RANDOM_CHANNEL:
+            response += "1 request for the day."
+        else:
+            response += "10 requests for the day."
 
     else:
         title, image = get_reddit_stuff(command, options)
@@ -100,22 +110,39 @@ def parse_slack_output(slack_rtm_output):
                     print(users.get(curr_id)[0] + " is a blocked user")
                     return None, None, None
 
-                # if user has called the bot 10 times, give the appropriate response
-                if curr_id not in WHITELISTED_IDS and users.get(curr_id)[1] == 10:
-                    users.get(curr_id)[1] += 1
-                    print(users.get(curr_id)[0] + " has exceeded their 10 requests for the day")
-                    return users.get(curr_id)[0], output['channel'], 'exceed'
-                # if user has called the bot more than 10 times, give nothing
-                elif curr_id not in WHITELISTED_IDS and users.get(curr_id)[1] > 10:
-                    return None, None, None
-
                 # if user is whitelisted, do not increment their request count
                 if curr_id in WHITELISTED_IDS:
                     print(users.get(curr_id)[0] + " is a whitelisted user")
-                # increment request count of user that called bot
+
+                # check if user has surpassed their alloted amount of requests per channel
                 else:
-                    users.get(curr_id)[1] += 1
-                    print(users.get(curr_id)[0] + " has called the bot " + str(users.get(curr_id)[1]) + " times today")
+                    if output['channel'] == RANDOM_CHANNEL:
+                        # if user has called the bot 10 times, give the appropriate response
+                        if users.get(curr_id)[1] == RANDOM_CAP: 
+                            users.get(curr_id)[1] += 1
+                            print(users.get(curr_id)[0] + " has exceeded their random requests for the day")
+                            return users.get(curr_id)[0], output['channel'], 'exceed'
+                    # if user has called the bot more than 10 times, give nothing
+                        elif users.get(curr_id)[1] > RANDOM_CAP:
+                            return None, None, None
+                        else:
+                            users.get(curr_id)[1] += 1
+                            times = " times" if users.get(curr_id)[1] > 1 else " time"
+                            print(users.get(curr_id)[0] + " has called the bot " + str(users.get(curr_id)[1]) + times + " today from #random")
+
+                    if output['channel'] == REDDIT_CHANNEL:
+                        # if user has called the bot 10 times, give the appropriate response
+                        if users.get(curr_id)[2] == REDDIT_CAP:
+                            users.get(curr_id)[2] += 1
+                            print(users.get(curr_id)[0] + " has exceeded their reddit requests for the day")
+                            return users.get(curr_id)[0], output['channel'], 'exceed'
+                        # if user has called the bot more than 10 times, give nothing
+                        elif users.get(curr_id)[2] > REDDIT_CAP:
+                            return None, None, None
+                        else:
+                            users.get(curr_id)[2] += 1
+                            times = " times" if users.get(curr_id)[2] > 1 else " time"
+                            print(users.get(curr_id)[0] + " has called the bot " + str(users.get(curr_id)[2]) + times + " today from #reddit")
 
                 # get text right after the bot is called
                 first = output['text'].split(AT_BOT)[1].strip().lower()
@@ -148,11 +175,12 @@ def parse_slack_output(slack_rtm_output):
 
 
 def reset_count():
-    print("COUNT RESET: " + str(datetime.now()))
+    print("COUNT RESET: " + str(datetime.datetime.now()))
     
     # reset each user's count to 0
     for curr_id in users:
         users.get(curr_id)[1] = 0
+        users.get(curr_id)[2] = 0
 
 
 if __name__ == '__main__':
@@ -168,7 +196,7 @@ if __name__ == '__main__':
 
     # fill users dictionary with all users names and an initial count of 0
     for user in all_users:
-        users[user.get('id')] = [user.get('name'), 0]
+        users[user.get('id')] = [user.get('name'), 0, 0] # first 0 is in #random second 0 is in #reddit
 
     count = 0
 
