@@ -16,13 +16,13 @@ AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 LOL_IDS = []
 BLACKLISTED_IDS = [] # any user ID in here will get no response from bot
-# WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
-WHITELISTED_IDS = []
+WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
+
 RANDOM_CHANNEL = credentials.random_channel
 REDDIT_CHANNEL = credentials.reddit_channel
 
 RANDOM_CAP = 1
-REDDIT_CAP = 10
+REDDIT_CAP = 50
 
 def get_reddit_stuff(subreddit, options):
     title = ""
@@ -160,7 +160,7 @@ def parse_slack_output(slack_rtm_output):
                 if len(optional) > 1:
                     options = optional[1]
 
-                if text is None or text == ' ':
+                if text is None or text == ' ' or text.lower() == 'watchpeopledie':
                     return None, None, None
 
                 # ensure that subreddit is valid and only contains a-z, A-Z, 0-9, _
