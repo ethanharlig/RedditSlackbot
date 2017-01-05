@@ -16,7 +16,8 @@ AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 LOL_IDS = []
 BLACKLISTED_IDS = [] # any user ID in here will get no response from bot
-WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
+# WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
+WHITELISTED_IDS = []
 
 RANDOM_CHANNEL = credentials.random_channel
 REDDIT_CHANNEL = credentials.reddit_channel
@@ -96,12 +97,20 @@ def handle_command(command, channel, options):
     else:
         title, image = get_reddit_stuff(command, options)
         response = title + "\n" + image
+        if title == "Invalid/unsupported subreddit":
+            if channel == RANDOM_CHANNEL:
+                users.get(curr_id)[1] -= 1
+            elif channel == REDDIT_CHANNEL:
+                users.get(curr_id)[2] -= 1
     # post the reponse message into the requested channel with the appropriate response
     slack_client.api_call("chat.postMessage", channel=channel, text=response, as_user=True)
 
 
 def parse_slack_output(slack_rtm_output):
+    global curr_id
+
     output_list = slack_rtm_output
+
     if output_list and len(output_list) > 0:
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
