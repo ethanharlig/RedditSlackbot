@@ -16,8 +16,7 @@ AT_BOT = "<@" + credentials.BOT_ID + ">"
 
 LOL_IDS = []
 BLACKLISTED_IDS = [] # any user ID in here will get no response from bot
-# WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
-WHITELISTED_IDS = []
+WHITELISTED_IDS = ['U0XS9BU3V'] # any user ID in here will be able to request as many times as they want per day
 
 RANDOM_CHANNEL = credentials.random_channel
 REDDIT_CHANNEL = credentials.reddit_channel
