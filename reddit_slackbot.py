@@ -1,6 +1,5 @@
 from __future__ import print_function
 from slackclient import SlackClient
-from twilio.rest import TwilioRestClient
 import praw
 import random
 import time
@@ -201,6 +200,10 @@ if __name__ == '__main__':
 
     users = {}
     all_users = slack_client.api_call("users.list").get('members')
+    # for user in all_users:
+        # print(user)
+    for channel in slack_client.api_call('channels.list').get('channels'):
+        print(channel)
 
     # fill users dictionary with all users names and an initial count of 0
     for user in all_users:
@@ -213,6 +216,7 @@ if __name__ == '__main__':
             count += READ_WEBSOCKET_DELAY
 
             command, channel, options = parse_slack_output(slack_client.rtm_read())
+            print(command, channel, options)
             if command and channel:
                 handle_command(command, channel, options)
             time.sleep(READ_WEBSOCKET_DELAY)
@@ -229,3 +233,4 @@ if __name__ == '__main__':
                 count = 0
     else:
         print("Connection failed. Invalid Slack token or bot ID.")
+
